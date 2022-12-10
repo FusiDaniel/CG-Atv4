@@ -11,6 +11,8 @@ public:
   void resizeViewport(glm::ivec2 const &size);
 
   [[nodiscard]] glm::mat4 getRotation() const;
+  [[nodiscard]] glm::vec3 getXY() const;
+  
 
   void setAxis(glm::vec3 const axis) noexcept { m_axis = axis; }
   void setVelocity(float const velocity) noexcept { m_velocity = velocity; }
@@ -22,6 +24,7 @@ private:
   glm::mat4 m_rotation{1.0f};
 
   glm::vec3 m_lastPosition{};
+  glm::vec3 m_lastXY{};
   abcg::Timer m_lastTime{};
 
   float m_velocity{};
@@ -31,6 +34,7 @@ private:
   glm::ivec2 m_viewportSize{};
 
   [[nodiscard]] glm::vec3 project(glm::vec2 const &mousePosition) const;
+  [[nodiscard]] glm::vec3 setXY(glm::vec2 const &mousePosition) const;
 };
 
 #endif

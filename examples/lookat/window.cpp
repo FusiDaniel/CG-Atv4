@@ -16,19 +16,20 @@ template <> struct std::hash<Vertex> {
 void Window::onEvent(SDL_Event const &event) {
   glm::ivec2 mousePosition;
   SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
-  
-  if (event.type == SDL_MOUSEMOTION) {
-  std::cout << glm::to_string(glm::vec3(1.0f))  << std::endl;
 
+  if (event.type == SDL_MOUSEMOTION) {
+    // std::cout << glm::to_string(glm::vec3(1.0f))  << std::endl;
     m_trackBall.mouseMove(m_viewportSize - mousePosition);
   }
   if (event.type == SDL_MOUSEBUTTONDOWN &&
       event.button.button == SDL_BUTTON_LEFT) {
     m_trackBall.mousePress(m_viewportSize - mousePosition);
+    pressed = true;
   }
   if (event.type == SDL_MOUSEBUTTONUP &&
       event.button.button == SDL_BUTTON_LEFT) {
     m_trackBall.mouseRelease(m_viewportSize - mousePosition);
+    pressed = false;
   }
   if (event.type == SDL_MOUSEWHEEL) {
     m_zoom += (event.wheel.y > 0 ? -1.0f : 1.0f) / 5.0f;
@@ -49,9 +50,14 @@ void Window::onEvent(SDL_Event const &event) {
     if (event.key.keysym.sym == SDLK_e)
       m_panSpeed = 1.0f;
     if (event.key.keysym.sym == SDLK_SPACE)
-      m_XpanSpeed = -1.0f;
-    if (event.key.keysym.sym == SDLK_LSHIFT)
-      m_XpanSpeed = 1.0f;
+      avodaco = true;
+    if (event.key.keysym.sym == SDLK_LSHIFT) {
+      m_camera.crouching(true);
+      crouchReducer = 0.72;
+    }
+    if (event.key.keysym.sym == SDLK_LCTRL) {
+      crouchReducer = 2.0;
+    }
   }
   if (event.type == SDL_KEYUP) {
     if ((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_w) &&
@@ -72,9 +78,14 @@ void Window::onEvent(SDL_Event const &event) {
     if (event.key.keysym.sym == SDLK_e && m_panSpeed > 0)
       m_panSpeed = 0.0f;
     if (event.key.keysym.sym == SDLK_SPACE)
-      m_XpanSpeed = 0.0f;
-    if (event.key.keysym.sym == SDLK_LSHIFT)
-      m_XpanSpeed = 0.0f;
+      avodaco = false;
+    if (event.key.keysym.sym == SDLK_LSHIFT) {
+      m_camera.crouching(false);
+      crouchReducer = 1.5;
+    }
+    if (event.key.keysym.sym == SDLK_LCTRL) {
+      crouchReducer = 1.5;
+    }
   }
 }
 
@@ -280,8 +291,9 @@ void Window::onUpdate() {
   auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
 
   // Update LookAt camera
-  m_camera.trackball(m_trackBall);
-  m_camera.dolly(m_dollySpeed * deltaTime);
-  m_camera.truck(m_truckSpeed * deltaTime);
-  m_camera.pan(m_panSpeed * deltaTime, m_XpanSpeed * deltaTime);
+  m_camera.dolly(m_dollySpeed * deltaTime * crouchReducer);
+  m_camera.truck(m_truckSpeed * deltaTime * crouchReducer);
+  m_camera.pan(m_panSpeed * deltaTime);
+  m_camera.trackball(m_trackBall, pressed);
+  m_camera.jump(avodaco, deltaTime);
 }

@@ -8,9 +8,10 @@
 #include <iostream>
 
 void TrackBall::mouseMove(glm::ivec2 const &position) {
+  m_lastXY = setXY(position);
   if (!m_mouseTracking)
     return;
-
+  
   auto const currentPosition{project(position)};
   
   // std::cout << glm::to_string(currentPosition)  << std::endl;
@@ -27,7 +28,7 @@ void TrackBall::mouseMove(glm::ivec2 const &position) {
 
   m_axis = glm::normalize(m_axis);
   
-  std::cout << glm::to_string(m_axis)  << std::endl;
+  // std::cout << glm::to_string(m_axis)  << std::endl;
   // Compute an angle velocity that will be used as a constant rotation angle
   // when the mouse is not being tracked.
   m_velocity = angle / (gsl::narrow_cast<float>(m_lastTime.restart()) +
@@ -58,6 +59,17 @@ void TrackBall::resizeViewport(glm::ivec2 const &size) {
   m_viewportSize = size;
 }
 
+glm::vec3 TrackBall::setXY(glm::vec2 const &position) const {
+  return glm::vec3(
+      2.0f * position.x / gsl::narrow<float>(m_viewportSize.x) - 1.0f,
+      1.0f - 2.0f * position.y / gsl::narrow<float>(m_viewportSize.y), 0.0f);
+}
+
+glm::vec3 TrackBall::getXY() const {
+  return m_lastXY;
+}
+
+
 glm::mat4 TrackBall::getRotation() const {
   if (m_mouseTracking)
     return m_rotation;
@@ -77,6 +89,7 @@ glm::vec3 TrackBall::project(glm::vec2 const &position) const {
       2.0f * position.x / gsl::narrow<float>(m_viewportSize.x) - 1.0f,
       1.0f - 2.0f * position.y / gsl::narrow<float>(m_viewportSize.y), 0.0f)};
 
+  // std::cout << glm::to_string(projected)  << std::endl;
   // Project to centered unit hemisphere
   if (auto const squaredLength{glm::length2(projected)};
       squaredLength >= 1.0f) {

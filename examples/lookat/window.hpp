@@ -41,7 +41,9 @@ private:
   float m_dollySpeed{};
   float m_truckSpeed{};
   float m_panSpeed{};
-  float m_XpanSpeed{};
+  float crouchReducer{1.5};
+  bool avodaco{false};
+  bool pressed{false};
 
   Ground m_ground;
 
