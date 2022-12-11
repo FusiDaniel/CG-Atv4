@@ -54,6 +54,7 @@ private:
   float m_zoom{};
 
   void loadModelFromFile(std::string_view path);
+  void createCube();
 };
 
 #endif

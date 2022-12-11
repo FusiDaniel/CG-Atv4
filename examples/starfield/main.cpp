@@ -7,9 +7,9 @@ int main(int argc, char **argv) {
     Window window;
     window.setOpenGLSettings({.samples = 4});
     window.setWindowSettings({
-        .width = 800,
-        .height = 800,
-        .title = "Basic Minecraft",
+        .width = 600,
+        .height = 600,
+        .title = "Starfield Effect",
     });
 
     app.run(window);

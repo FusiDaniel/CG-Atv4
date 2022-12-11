@@ -4,10 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
+#include <tgmath.h>
 
-void Camera::crouching(bool isCrouching){
-  if (isCrouching) crouch = 0.833f;
-  else crouch = 1.0f;
+void Camera::crouching(bool isCrouching) {
+  if (isCrouching)
+    crouch = 0.833f;
+  else
+    crouch = 1.0f;
   computeViewMatrix();
 }
 
@@ -18,12 +21,19 @@ void Camera::computeProjectionMatrix(glm::vec2 const &size) {
 }
 
 void Camera::computeViewMatrix() {
-  // std::cout << glm::to_string(m_eye)  << std::endl;
+  // std::cout << fmod(m_eye[0], 0.5f) << std::endl;
+  // std::cout << (int)(m_eye[0]*2) << std::endl;
+  // std::cout << abs(m_eye[0]) << std::endl;
+  // std::cout << fmod(abs(m_eye[0]), 0.5f) << std::endl;
+  // std::cout << (static_cast<int>(abs(m_eye[0]) / 0.5 + 0.5)) % 2 <<
+  // std::endl; std::cout << fmod(m_eye[2], 0.5f) << std::endl;
+  std::cout << glm::to_string(m_eye) << std::endl;
   // std::cout << glm::to_string(m_at)  << std::endl;
   // std::cout << glm::to_string(m_up)  << std::endl;
 
   // m_at.y = std::max(0.1f, m_at.y);
-  m_eye.y = std::max(0.5f, m_eye.y);
+  if (groundColision())
+    m_eye.y = std::max(0.5f, m_eye.y);
 
   auto aux_m_at = m_at;
   auto aux_m_eye = m_eye;
@@ -40,10 +50,12 @@ void Camera::trackball(TrackBall trackBall, bool pressed) {
   glm::mat4 transform{1.0f};
   auto const forward{glm::normalize(m_at - m_eye)};
   auto const left{glm::cross(m_up, forward)};
-  // Rotate camera around its local y axis
+  // Rotate camera around its local x and y axis
   transform = glm::translate(transform, m_eye);
-  transform = glm::rotate(transform, m_trackBall.getXY()[0] - trackBall.getXY()[0], m_up);
-  transform = glm::rotate(transform, m_trackBall.getXY()[1] - trackBall.getXY()[1], left);
+  transform = glm::rotate(transform,
+                          m_trackBall.getXY()[0] - trackBall.getXY()[0], m_up);
+  transform = glm::rotate(transform,
+                          m_trackBall.getXY()[1] - trackBall.getXY()[1], left);
   transform = glm::translate(transform, -m_eye);
 
   m_at = transform * glm::vec4(m_at, 1.0f);
@@ -54,7 +66,12 @@ void Camera::trackball(TrackBall trackBall, bool pressed) {
 
 void Camera::dolly(float speed) {
   // Compute forward vector (view direction)
-  auto const forward{glm::normalize(m_at - m_eye)};
+  auto aux_at = m_at;
+  aux_at[1] = 0.0f;
+  auto forward{glm::normalize(aux_at - m_eye)};
+
+  if (cubeSideColision(m_eye + forward * speed))
+    return;
 
   // Move eye and center forward (speed > 0) or backward (speed < 0)
   m_eye += forward * speed;
@@ -65,21 +82,25 @@ void Camera::dolly(float speed) {
 
 void Camera::truck(float speed) {
   // Compute forward vector (view direction)
-  auto const forward{glm::normalize(m_at - m_eye)};
+  auto aux_at = m_at;
+  aux_at[1] = 0.0f;
+  auto forward{glm::normalize(aux_at - m_eye)};
   // Compute vector to the left
   auto const left{glm::cross(m_up, forward)};
 
+  if (cubeSideColision(m_eye - left * speed))
+    return;
   // Move eye and center to the left (speed < 0) or to the right (speed > 0)
-  m_at -= left * speed;
   m_eye -= left * speed;
+  m_at -= left * speed;
 
   computeViewMatrix();
 }
 
 void Camera::pan(float speed) {
   glm::mat4 transform{1.0f};
-  
-   std::cout << speed << std::endl;
+
+  //  std::cout << speed << std::endl;
   // Rotate camera around its local y axis
   transform = glm::translate(transform, m_eye);
   transform = glm::rotate(transform, -speed, m_up);
@@ -90,8 +111,30 @@ void Camera::pan(float speed) {
   computeViewMatrix();
 }
 
+bool Camera::cubeSideColision(glm::vec3 eye) {
+  if ((eye[1] > -1.5 && eye[1] < 0.5) &&
+      ((static_cast<int>(abs(eye[0]) / 0.5 + 0.5)) % 2 == 1)) {
+    return true;
+  }
+  return false;
+}
+
+bool Camera::groundColision() {
+  if ((m_eye[1] > 0.5 - 0.01 && m_eye[1] < 0.5 + 0.01) &&
+      ((static_cast<int>(abs(m_eye[0]) / 0.5 + 0.5)) % 2 == 1)) {
+    return true;
+  }
+  return false;
+}
+
 void Camera::jump(bool jump, float deltaTime) {
-  if (m_eye[1] > 0.5 - 0.1 && m_eye[1] < 0.5 + 0.1) {
+  if (m_eye[1] < -4.0f) {
+    m_eye = {0.5f, 2.5f, 0.5f};
+    computeViewMatrix();
+    return;
+  }
+
+  if (groundColision()) {
     if (jump)
       upSpeed = jumpSpeed;
     else
@@ -99,8 +142,7 @@ void Camera::jump(bool jump, float deltaTime) {
   } else
     upSpeed += deltaTime * gravity * 0.1;
 
-  upSpeed = std::max(upSpeed, -9.0f);
-  // std::cout << upSpeed << std::endl;
+  upSpeed = std::max(upSpeed, -3.0f);
 
   m_at += m_up * upSpeed * deltaTime;
   m_eye += m_up * upSpeed * deltaTime;
