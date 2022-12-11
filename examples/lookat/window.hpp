@@ -4,15 +4,14 @@
 #include "abcgOpenGL.hpp"
 
 #include "camera.hpp"
-#include "ground.hpp"
+#include "model.hpp"
 #include "trackball.hpp"
 
 
-struct Vertex {
-  glm::vec3 position;
-
-  friend bool operator==(Vertex const &, Vertex const &) = default;
-};
+// struct Vertex {
+//   glm::vec3 position;
+//   friend bool operator==(Vertex const &, Vertex const &) = default;
+// };
 
 class Window : public abcg::OpenGLWindow {
 protected:
@@ -44,8 +43,6 @@ private:
   float crouchReducer{1.5};
   bool avodaco{false};
   bool pressed{false};
-
-  Ground m_ground;
 
   std::vector<Vertex> m_vertices;
   std::vector<GLuint> m_indices;

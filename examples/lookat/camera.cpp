@@ -127,11 +127,23 @@ bool Camera::groundColision() {
   return false;
 }
 
+bool Camera::insideBlockColision() {
+  if ((m_eye[1] > -1.5 && m_eye[1] < 0.0) &&
+      ((static_cast<int>(abs(m_eye[0]) / 0.5 + 0.5)) % 2 == 1)) {
+    return true;
+  }
+  return false;
+}
+
 void Camera::jump(bool jump, float deltaTime) {
   if (m_eye[1] < -4.0f) {
     m_eye = {0.5f, 2.5f, 0.5f};
     computeViewMatrix();
     return;
+  }
+
+  if (insideBlockColision()) {
+    m_eye[1] = 0.5f;
   }
 
   if (groundColision()) {

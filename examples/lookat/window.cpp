@@ -99,20 +99,23 @@ void Window::onCreate() {
   abcg::glEnable(GL_DEPTH_TEST);
 
   // Create program
+  // m_program =
+  //     abcg::createOpenGLProgram({{.source = assetsPath + "blinnphong.vert",
+  //                                 .stage = abcg::ShaderStage::Vertex},
+  //                                {.source = assetsPath + "blinnphong.frag",
+  //                                 .stage = abcg::ShaderStage::Fragment}});
+
   m_program =
       abcg::createOpenGLProgram({{.source = assetsPath + "lookat.vert",
                                   .stage = abcg::ShaderStage::Vertex},
                                  {.source = assetsPath + "lookat.frag",
                                   .stage = abcg::ShaderStage::Fragment}});
 
-  m_ground.create(m_program);
-
   // Get location of uniform variables
   m_viewMatrixLocation = abcg::glGetUniformLocation(m_program, "viewMatrix");
   m_projMatrixLocation = abcg::glGetUniformLocation(m_program, "projMatrix");
-  m_modelMatrixLocation = abcg::glGetUniformLocation(m_program,
-  "modelMatrix"); m_colorLocation = abcg::glGetUniformLocation(m_program,
-  "color");
+  m_modelMatrixLocation = abcg::glGetUniformLocation(m_program, "modelMatrix");
+  m_colorLocation = abcg::glGetUniformLocation(m_program, "color");
 
   // Load model
   loadModelFromFile(assetsPath + "box.obj");
@@ -152,95 +155,6 @@ void Window::onCreate() {
   // End of binding to current VAO
   abcg::glBindVertexArray(0);
 }
-
-// void Window::onCreate() {
-
-//   auto const &assetsPath{abcg::Application::getAssetsPath()};
-
-//   abcg::glClearColor(0, 0, 0, 1);
-
-//   // Enable depth buffering
-//   abcg::glEnable(GL_DEPTH_TEST);
-
-//   // Create program
-//   m_program =
-//       abcg::createOpenGLProgram({{.source = assetsPath + "lookat.vert",
-//                                   .stage = abcg::ShaderStage::Vertex},
-//                                  {.source = assetsPath + "lookat.frag",
-//                                   .stage = abcg::ShaderStage::Fragment}});
-
-//   m_ground.create(m_program);
-
-//   // Get location of uniform variables
-//   m_viewMatrixLocation = abcg::glGetUniformLocation(m_program, "viewMatrix");
-//   m_projMatrixLocation = abcg::glGetUniformLocation(m_program, "projMatrix");
-//   m_modelMatrixLocation = abcg::glGetUniformLocation(m_program, "modelMatrix");
-//   m_colorLocation = abcg::glGetUniformLocation(m_program, "color");
-
-//   // clang-format off
-//   // Creating Cube
-//   std::array positions{
-//       glm::vec3{-1.0f, -1.0f, -1.0f},
-//       glm::vec3{-1.0f, -1.0f, 1.0f},
-//       glm::vec3{-1.0f, 1.0f, -1.0f},  
-//       glm::vec3{-1.0f, 1.0f, 1.0f},
-//       glm::vec3{1.0f, -1.0f, -1.0f},  
-//       glm::vec3{1.0f, -1.0f, 1.0f},
-//       glm::vec3{1.0f, 1.0f, -1.0f},   
-//       glm::vec3{1.0f, 1.0f, 1.0f},
-//   };
-
-//   std::array const indices{
-//    0, 1, 2,
-//    1, 3, 2,
-//    4, 5, 6,
-//    5, 7, 6,
-//    0, 4, 2,
-//    4, 6, 2,
-//    1, 5, 3,
-//    2, 7, 3,
-//    2, 6, 3,
-//    6, 7, 3,
-//    0, 4, 1,
-//    4, 5, 1
-//    };
-//   // clang-format on  
-
-//   // VBO
-//   abcg::glGenBuffers(1, &m_VBO);
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-//   abcg::glBufferData(GL_ARRAY_BUFFER,
-//                      sizeof(positions),
-//                      positions.data(), GL_STATIC_DRAW);
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-//   // EBO
-//   abcg::glGenBuffers(1, &m_EBO);
-//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-//   abcg::glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-//                      sizeof(indices),
-//                      indices.data(), GL_STATIC_DRAW);
-//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  
-//   // Create VAO
-//   abcg::glGenVertexArrays(1, &m_VAO);
-
-//   // Bind vertex attributes to current VAO
-//   abcg::glBindVertexArray(m_VAO);
-
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-//   auto const positionAttribute{
-//       abcg::glGetAttribLocation(m_program, "inPosition")};
-//   abcg::glEnableVertexAttribArray(positionAttribute);
-//   abcg::glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE,
-//                               sizeof(Vertex), nullptr);
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-
-//   // End of binding to current VAO
-//   abcg::glBindVertexArray(0);
-// }
 
 void Window::loadModelFromFile(std::string_view path) {
   tinyobj::ObjReader reader;
@@ -312,65 +226,23 @@ void Window::onPaint() {
   abcg::glBindVertexArray(m_VAO);
 
   const int groundCount{15};
-  for (int x=0; x < groundCount; x++) {
-    for (int y=0; y < groundCount; y++) {
+  for (int x = 0; x < groundCount; x++) {
+    for (int y = 0; y < groundCount; y++) {
       glm::mat4 model{1.0f};
-      model = glm::translate(model, glm::vec3(-(groundCount/2.0-1.0f) + x, -0.5f, -(groundCount/2.0-1.0f) + y));
+      model = glm::translate(model,
+                             glm::vec3(-(groundCount / 2.0 - 1.0f) + x, -0.5f,
+                                       -(groundCount / 2.0 - 1.0f) + y));
       model = glm::scale(model, glm::vec3(0.5f));
 
-      abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE, &model[0][0]);
-      abcg::glUniform4f(m_colorLocation, x/(groundCount*1.0), (x+y)/(groundCount*2.0f), y/(groundCount*1.0), 1.0f);
+      abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE,
+                               &model[0][0]);
+      abcg::glUniform4f(m_colorLocation, x / (groundCount * 1.0),
+                        (x + y) / (groundCount * 2.0f), y / (groundCount * 1.0),
+                        1.0f);
       abcg::glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT,
-                          nullptr);
+                           nullptr);
     }
   }
-
-  // // Draw white bunny
-  // glm::mat4 model{1.0f};
-  // model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 0.0f));
-  // model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
-  // model = glm::scale(model, glm::vec3(0.5f));
-
-  // abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE, &model[0][0]);
-  // abcg::glUniform4f(m_colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
-  // abcg::glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT,
-  //                      nullptr);
-
-  // // Draw yellow bunny
-  // model = glm::mat4(1.0);
-  // model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
-  // model = glm::scale(model, glm::vec3(0.5f));
-
-  // abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE, &model[0][0]);
-  // abcg::glUniform4f(m_colorLocation, 1.0f, 0.8f, 0.0f, 1.0f);
-  // abcg::glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT,
-  //                      nullptr);
-
-  // // Draw blue bunny
-  // model = glm::mat4(1.0);
-  // model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
-  // model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
-  // model = glm::scale(model, glm::vec3(0.5f));
-
-  // abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE, &model[0][0]);
-  // abcg::glUniform4f(m_colorLocation, 0.0f, 0.8f, 1.0f, 1.0f);
-  // abcg::glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT,
-  //                      nullptr);
-
-  // // Draw red bunny
-  // model = glm::mat4(1.0);
-  // model = glm::scale(model, glm::vec3(0.1f));
-
-  // abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE, &model[0][0]);
-  // abcg::glUniform4f(m_colorLocation, 1.0f, 0.25f, 0.25f, 1.0f);
-  // abcg::glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT,
-  //                      nullptr);
-
-  // abcg::glBindVertexArray(0);
-
-  // // Draw ground
-  // m_ground.paint();
-
   abcg::glUseProgram(0);
 }
 
@@ -383,8 +255,6 @@ void Window::onResize(glm::ivec2 const &size) {
 }
 
 void Window::onDestroy() {
-  m_ground.destroy();
-
   abcg::glDeleteProgram(m_program);
   abcg::glDeleteBuffers(1, &m_EBO);
   abcg::glDeleteBuffers(1, &m_VBO);
@@ -401,3 +271,105 @@ void Window::onUpdate() {
   m_camera.trackball(m_trackBall, pressed);
   m_camera.jump(avodaco, deltaTime);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// void Window::onCreate() {
+
+//   auto const &assetsPath{abcg::Application::getAssetsPath()};
+
+//   abcg::glClearColor(0, 0, 0, 1);
+
+//   // Enable depth buffering
+//   abcg::glEnable(GL_DEPTH_TEST);
+
+//   // Create program
+//   m_program =
+//       abcg::createOpenGLProgram({{.source = assetsPath + "lookat.vert",
+//                                   .stage = abcg::ShaderStage::Vertex},
+//                                  {.source = assetsPath + "lookat.frag",
+//                                   .stage = abcg::ShaderStage::Fragment}});
+
+//   m_ground.create(m_program);
+
+//   // Get location of uniform variables
+//   m_viewMatrixLocation = abcg::glGetUniformLocation(m_program, "viewMatrix");
+//   m_projMatrixLocation = abcg::glGetUniformLocation(m_program, "projMatrix");
+//   m_modelMatrixLocation = abcg::glGetUniformLocation(m_program,
+//   "modelMatrix"); m_colorLocation = abcg::glGetUniformLocation(m_program,
+//   "color");
+
+//   // clang-format off
+//   // Creating Cube
+//   std::array positions{
+//       glm::vec3{-1.0f, -1.0f, -1.0f},
+//       glm::vec3{-1.0f, -1.0f, 1.0f},
+//       glm::vec3{-1.0f, 1.0f, -1.0f},
+//       glm::vec3{-1.0f, 1.0f, 1.0f},
+//       glm::vec3{1.0f, -1.0f, -1.0f},
+//       glm::vec3{1.0f, -1.0f, 1.0f},
+//       glm::vec3{1.0f, 1.0f, -1.0f},
+//       glm::vec3{1.0f, 1.0f, 1.0f},
+//   };
+
+//   std::array const indices{
+//    0, 1, 2,
+//    1, 3, 2,
+//    4, 5, 6,
+//    5, 7, 6,
+//    0, 4, 2,
+//    4, 6, 2,
+//    1, 5, 3,
+//    2, 7, 3,
+//    2, 6, 3,
+//    6, 7, 3,
+//    0, 4, 1,
+//    4, 5, 1
+//    };
+//   // clang-format on
+
+//   // VBO
+//   abcg::glGenBuffers(1, &m_VBO);
+//   abcg::glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+//   abcg::glBufferData(GL_ARRAY_BUFFER,
+//                      sizeof(positions),
+//                      positions.data(), GL_STATIC_DRAW);
+//   abcg::glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+//   // EBO
+//   abcg::glGenBuffers(1, &m_EBO);
+//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+//   abcg::glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+//                      sizeof(indices),
+//                      indices.data(), GL_STATIC_DRAW);
+//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+//   // Create VAO
+//   abcg::glGenVertexArrays(1, &m_VAO);
+
+//   // Bind vertex attributes to current VAO
+//   abcg::glBindVertexArray(m_VAO);
+
+//   abcg::glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+//   auto const positionAttribute{
+//       abcg::glGetAttribLocation(m_program, "inPosition")};
+//   abcg::glEnableVertexAttribArray(positionAttribute);
+//   abcg::glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE,
+//                               sizeof(Vertex), nullptr);
+//   abcg::glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+
+//   // End of binding to current VAO
+//   abcg::glBindVertexArray(0);
+// }

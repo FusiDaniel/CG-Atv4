@@ -39,7 +39,7 @@ private:
 
   bool groundColision();
   bool cubeSideColision(glm::vec3 eye);
-
+  bool insideBlockColision();
   TrackBall m_trackBall;
 };
 
