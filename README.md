@@ -31,7 +31,7 @@ GitHub Pages: [Basic Minecraft](https://fusidaniel.github.io/CG-Atv4/public/full
 | :--------- | ------------------------------------------------------- |
 | W A S D    | Movimentação do personagem                        |
 | Mouse          | Movimentação da câmera (semelhante ao controle trackball, segurar botão esquerdo e arrastar na tela)                           |
-| Shift Esquerdo         | Faz personagem esgueirar e andar mais devagar                              |
+| Shift Esquerdo         | Faz personagem esgueirar e andar mais devagar quando combinado com WASD                              |
 | Control Esquerdo         | Faz personagem correr quando combinado com WASD |
 | Barra de Espaço         | Pulo                              |
 
