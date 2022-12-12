@@ -57,6 +57,58 @@ glm::vec3 TrackBall::getXY() const {
 ```
 - Essa simplificação se deu porque para a movimentação da câmera no lookAt já implementado, apenas as coordenadas X e Y já eram suficientes, uma matriz com componentes de rotação X, Y e Z gerariam problemas posteriormente na responsividade e intuitividade da câmera.
 
+### `camera.hpp e camera.cpp`
+- Neste arquivo são definidas todas as funções relacionadas à movimentação da câmera, tanto em relação ao espaço, quanto à rotação em relação à si mesma.
+
+#### crouching() reduz a altura da câmera
+``` cpp
+void Camera::crouching(bool isCrouching) {
+  if (isCrouching)
+    heightMultiplier = 0.833f;
+  else
+    heightMultiplier = 1.0f;
+  computeViewMatrix();
+}
+```
+#### trackball() transforma os inputs de X e Y trazidos de trackball::getXY() em rotação da câmera, utilizando a função glm::rotate sobre uma matriz de transformação e um vetor apontando para cima, e outro apontando para esquerda, de forma a gerar rotação horizontal e vertical respectivamente. Dessa forma, conseguimos uma rotação satisfatória, mantendo a câmera sempre na horizontal, ou seja, não mexendo na rotação entorno do eixo z, igual aos jogos FPS
+``` cpp
+void Camera::trackball(TrackBall trackBall, bool left_click) {
+  if (!left_click) {
+    m_trackBall = trackBall;
+    return;
+  }
+  glm::mat4 transform{1.0f};
+  auto const forward{glm::normalize(m_at - m_eye)};
+  auto const left{glm::cross(m_up, forward)};
+
+  // Rotate camera around its local x and y axis
+  transform = glm::translate(transform, m_eye);
+  transform = glm::rotate(transform,
+                          m_trackBall.getXY()[0] - trackBall.getXY()[0], m_up);
+  transform = glm::rotate(transform,
+                          m_trackBall.getXY()[1] - trackBall.getXY()[1], left);
+  transform = glm::translate(transform, -m_eye);
+
+  m_at = transform * glm::vec4(m_at, 1.0f);
+
+  m_trackBall = trackBall;
+  computeViewMatrix();
+}
+```
+
+``` cpp
+```
+
+``` cpp
+```
+
+``` cpp
+```
+
+### `window.hpp`
+- 
+
+
 Controles
 
 W A S D -> Movimentação 
