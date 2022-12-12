@@ -15,7 +15,10 @@ Development framework accompanying the course [MCTA008-17 Computer Graphics](htt
 ABCg is a lightweight C++ framework that simplifies the development of 3D graphics applications based on [OpenGL](https://www.opengl.org), [OpenGL ES](https://www.khronos.org), [WebGL](https://www.khronos.org/webgl/), and [Vulkan](https://www.vulkan.org). It is designed for the tutorials and assignments of the course "MCTA008-17 Computer Graphics" taught at Federal University of ABC (UFABC).
 
 # Atividade 04 - Simulação de jogo de plataforma em primeira pessoa
-GitHub Pages: [ExplodingRubikCube](https://fusidaniel.github.io/CG-Atv4/public/full_window.html)
+
+![Demo](README_files/demo.gif)
+
+GitHub Pages: [Basic Minecraft](https://fusidaniel.github.io/CG-Atv4/public/full_window.html)
 
 ## Descrição Geral
 
