@@ -15,11 +15,22 @@ Development framework accompanying the course [MCTA008-17 Computer Graphics](htt
 ABCg is a lightweight C++ framework that simplifies the development of 3D graphics applications based on [OpenGL](https://www.opengl.org), [OpenGL ES](https://www.khronos.org), [WebGL](https://www.khronos.org/webgl/), and [Vulkan](https://www.vulkan.org). It is designed for the tutorials and assignments of the course "MCTA008-17 Computer Graphics" taught at Federal University of ABC (UFABC).
 
 # Atividade 04 - Simulação de jogo de plataforma em primeira pessoa
+GitHub Pages: [ExplodingRubikCube](https://fusidaniel.github.io/CG-Atv4/public/full_window.html)
 
 ## Descrição Geral
 
 - Foi desenvolvido um ambiente simples de blocos espalhados, onde o usuário pode se mover pulando de bloco em bloco.
 - O projeto foi baseado na movimentação do jogo Minecraft, neste projeto foram implementadas as funções de movimentação do personagem e da câmera, gravidade, salto, agachamento e corrida. Além um sistema simples de colisão que permite detectar se o usuário errou ou não oo pulo.
+
+# Controles
+
+| KEY        | FUNCTION                                                |
+| :--------- | ------------------------------------------------------- |
+| W A S D    | Movimentação do personagem                        |
+| Mouse          | Movimentação da câmera (semelhante ao controle trackball, segurar botão esquerdo e arrastar na tela)                           |
+| Shift Esquerdo         | Faz personagem esgueirar e andar mais devagar                              |
+| Control Esquerdo         | Faz personagem correr quando combinado com WASD |
+| Barra de Espaço         | Pulo                              |
 
 ## To Do / Não deu tempo para fazer
 
@@ -95,27 +106,104 @@ void Camera::trackball(TrackBall trackBall, bool left_click) {
   computeViewMatrix();
 }
 ```
-
+#### dolly() e truck() são funções que fazem o personagem se movimentar no plano do jogo. Aqui calculamos o vetor que aponta para frente e esquerda da visão, desconsiderando a rotação horizontal da câmera, e verificando a colisão com os blocos.
 ``` cpp
+void Camera::dolly(float speed) {
+  // Compute forward vector (view direction)
+  auto aux_at = m_at;
+  aux_at[1] = 0.0f;
+  auto forward{glm::normalize(aux_at - m_eye)};
+
+  if (cubeSideColision(m_eye + forward * speed))
+    return;
+
+  // Move eye and center forward (speed > 0) or backward (speed < 0)
+  m_eye += forward * speed;
+  m_at += forward * speed;
+
+  computeViewMatrix();
+}
+
+void Camera::truck(float speed) {
+  // Compute forward vector (view direction)
+  auto aux_at = m_at;
+  aux_at[1] = 0.0f;
+  auto forward{glm::normalize(aux_at - m_eye)};
+  // Compute vector to the left
+  auto const left{glm::cross(m_up, forward)};
+
+  if (cubeSideColision(m_eye - left * speed))
+    return;
+  // Move eye and center to the left (speed < 0) or to the right (speed > 0)
+  m_eye -= left * speed;
+  m_at -= left * speed;
+
+  computeViewMatrix();
+}
+
+```
+#### cubeSideColision(), groundColision(), insideBlockColision() detectam colisão do personagem com a lateral do cubo, com o chão, e com o interior do cubo, respectivamente.
+
+### jump() é uma função que aplica a gravidade no personagem controlado pelo usuário, nela temos resets da posição do usuário caso ele tenha caído, ou caso esteja dentro de um bloco. Além disso, caso o personagem esteja encostando no chão, ele tem a capacidade de pular, que adiciona uma velocidade dele apontando para cima. Quando está no ar, uma função de gravidade é aplicada sobre o personagem aumentando sua velocidade de queda até atingir uma velocidade terminal, ou acertar o chão, ou cair no buraco.
+``` cpp
+void Camera::jump(bool jump, float deltaTime) {
+  if (m_eye[1] < -4.0f) {
+    m_eye = {0.5f, 2.5f, 0.5f};
+    computeViewMatrix();
+    return;
+  }
+
+  if (insideBlockColision()) {
+    m_eye[1] = 0.5f;
+  }
+
+  if (groundColision()) {
+    if (jump)
+      fallingSpeed = jumpSpeed;
+    else
+      fallingSpeed = 0.0;
+  } else
+    fallingSpeed += deltaTime * gravity * 0.1;
+
+  fallingSpeed = std::max(fallingSpeed, terminalSpeed);
+
+  m_at += m_up * fallingSpeed * deltaTime;
+  m_eye += m_up * fallingSpeed * deltaTime;
+
+  computeViewMatrix();
+}
+```
+#### computeViewMatrix() é a função que aplica todas as transformações descritas anteriormente na matriz de visão do personagem
+``` cpp
+void Camera::computeViewMatrix() {
+  if (groundColision())
+    m_eye.y = std::max(0.5f, m_eye.y);
+
+  auto aux_m_at = m_at;
+  auto aux_m_eye = m_eye;
+  aux_m_at.y *= heightMultiplier;
+  aux_m_eye.y *= heightMultiplier;
+  m_viewMatrix = glm::lookAt(aux_m_eye, aux_m_at, m_up);
+}
 ```
 
-``` cpp
-```
+### `window.hpp e window.cpp`
+- Aqui é a definição da janela da aplicação, não foi alterado muito em relação ao projeto LookAt original, as alterações consistiram em adicionar alguns efeitos em onEvent() ao pressionar algumas teclas, como shift para se esgueirar, control para correr, e barra de espaço para pular. Além da adaptação dos inputs para a implementação simplificada do trackball.
+- Tirando os inputs, na parte de onUpdate(), foram acrescentados multiplicadores de velocidade, além do chamado às funções m_camera.trackball() e m_camera.jump()
 
 ``` cpp
+void Window::onUpdate() {
+  auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
+
+  // Update LookAt camera
+  m_camera.dolly(m_dollySpeed * deltaTime * speedMultiplier);
+  m_camera.truck(m_truckSpeed * deltaTime * speedMultiplier);
+  m_camera.trackball(m_trackBall, left_click);
+  m_camera.jump(jumping, deltaTime);
+}
 ```
 
-### `window.hpp`
-- 
 
-
-Controles
-
-W A S D -> Movimentação 
-Mouse -> Câmera (semelhante ao controle trackball, segurar botão esquerdo e arrastar na tela)
-Shift Esquerdo -> Faz personagem esgueirar e andar mais devagar
-Control Esquerdo -> Faz personagem correr quando combinado com WASD
-Barra de Espaço -> Pulo
 
 ## License
 
