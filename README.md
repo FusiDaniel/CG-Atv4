@@ -1,5 +1,7 @@
 # ABCg
 
+Daniel Fusimoto Pires - RA: 11201921874
+
 ![linux workflow](https://github.com/hbatagelo/abcg/actions/workflows/linux.yml/badge.svg)
 ![macOS workflow](https://github.com/hbatagelo/abcg/actions/workflows/macos.yml/badge.svg)
 ![Windows workflow](https://github.com/hbatagelo/abcg/actions/workflows/windows.yml/badge.svg)
@@ -19,9 +21,10 @@ ABCg is a lightweight C++ framework that simplifies the development of 3D graphi
 - Foi desenvolvido um ambiente simples de blocos espalhados, onde o usuário pode se mover pulando de bloco em bloco.
 - O projeto foi baseado na movimentação do jogo Minecraft, neste projeto foram implementadas as funções de movimentação do personagem e da câmera, gravidade, salto, agachamento e corrida. Além um sistema simples de colisão que permite detectar se o usuário errou ou não oo pulo.
 
-## To Do
+## To Do / Não deu tempo para fazer
 
 - Por falta de tempo não consegui iniciar o processo de texturização dos blocos, iluminação mais elaborada e texturização do ambiente.
+- Também não consegui gerar os cubos por mim mesmo, ao invés de importar um .obj, acabei tendo problemas no processo de montar os triângulos.
 
 ## Implementação
 
@@ -30,6 +33,29 @@ ABCg is a lightweight C++ framework that simplifies the development of 3D graphi
 - main.cpp é responsável pela inicialização do programa/janela da aplicação.
 - lookat.frag, lookat.vert são responsáveis pelo shaders da aplicação
 
+### `trackball.hpp e trackball.cpp`
+- Aqui foi utilizada de base a implementação de trackball das atividades Viewer, entretanto, de uma forma mais simplificada. Aqui apenas lê-se o posicionamento do mouse da janela da aplicação e o armazena na variável m_lastXY, que é acessavel publicamente pela função getXY.
+
+``` cpp
+void TrackBall::mouseMove(glm::ivec2 const &position) {
+  m_lastXY = updateXY(position);
+}
+
+void TrackBall::resizeViewport(glm::ivec2 const &size) {
+  m_viewportSize = size;
+}
+
+glm::vec3 TrackBall::updateXY(glm::vec2 const &position) const {
+  return glm::vec3(
+      2.0f * position.x / gsl::narrow<float>(m_viewportSize.x) - 1.0f,
+      1.0f - 2.0f * position.y / gsl::narrow<float>(m_viewportSize.y), 0.0f);
+}
+
+glm::vec3 TrackBall::getXY() const {
+  return m_lastXY;
+}
+```
+- Essa simplificação se deu porque para a movimentação da câmera no lookAt já implementado, apenas as coordenadas X e Y já eram suficientes, uma matriz com componentes de rotação X, Y e Z gerariam problemas posteriormente na responsividade e intuitividade da câmera.
 
 Controles
 
