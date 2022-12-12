@@ -88,7 +88,7 @@ void Camera::truck(float speed) {
 }
 
 bool Camera::cubeSideColision(glm::vec3 eye) {
-  if ((eye[1] > -1.5 && eye[1] < 0.5) &&
+  if ((eye[1] > -1.5 && eye[1] < 0.25) &&
       ((static_cast<int>(abs(eye[0]) / 0.5 + 0.5)) % 2 == 1)) {
     return true;
   }
@@ -104,7 +104,7 @@ bool Camera::groundColision() {
 }
 
 bool Camera::insideBlockColision() {
-  if ((m_eye[1] > -1.5 && m_eye[1] < 0.0) &&
+  if ((m_eye[1] > -1.5 && m_eye[1] < 0.5) &&
       ((static_cast<int>(abs(m_eye[0]) / 0.5 + 0.5)) % 2 == 1)) {
     return true;
   }
@@ -117,7 +117,7 @@ void Camera::jump(bool jump, float deltaTime) {
     computeViewMatrix();
     return;
   }
-  
+
   if (insideBlockColision()) {
     m_eye[1] = 0.5f;
   }
