@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.11)
-
-string(TOLOWER ${GRAPHICS_API} SOURCE_SUBDIR)
-add_subdirectory(${SOURCE_SUBDIR})
+project(helloworld)
+add_executable(${PROJECT_NAME} camera.cpp main.cpp window.cpp trackball.cpp)
+enable_abcg(${PROJECT_NAME})

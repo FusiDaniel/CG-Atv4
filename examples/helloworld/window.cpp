@@ -18,22 +18,15 @@ void Window::onEvent(SDL_Event const &event) {
   SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
   if (event.type == SDL_MOUSEMOTION) {
-    // std::cout << glm::to_string(glm::vec3(1.0f))  << std::endl;
     m_trackBall.mouseMove(m_viewportSize - mousePosition);
   }
   if (event.type == SDL_MOUSEBUTTONDOWN &&
       event.button.button == SDL_BUTTON_LEFT) {
-    m_trackBall.mousePress(m_viewportSize - mousePosition);
-    pressed = true;
+    left_click = true;
   }
   if (event.type == SDL_MOUSEBUTTONUP &&
       event.button.button == SDL_BUTTON_LEFT) {
-    m_trackBall.mouseRelease(m_viewportSize - mousePosition);
-    pressed = false;
-  }
-  if (event.type == SDL_MOUSEWHEEL) {
-    m_zoom += (event.wheel.y > 0 ? -1.0f : 1.0f) / 5.0f;
-    m_zoom = glm::clamp(m_zoom, -1.5f, 1.0f);
+    left_click = false;
   }
 
   if (event.type == SDL_KEYDOWN) {
@@ -45,18 +38,14 @@ void Window::onEvent(SDL_Event const &event) {
       m_truckSpeed = -1.0f;
     if (event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_d)
       m_truckSpeed = 1.0f;
-    if (event.key.keysym.sym == SDLK_q)
-      m_panSpeed = -1.0f;
-    if (event.key.keysym.sym == SDLK_e)
-      m_panSpeed = 1.0f;
     if (event.key.keysym.sym == SDLK_SPACE)
-      avodaco = true;
+      jumping = true;
     if (event.key.keysym.sym == SDLK_LSHIFT) {
       m_camera.crouching(true);
-      crouchReducer = 0.72;
+      speedMultiplier = 0.72;
     }
     if (event.key.keysym.sym == SDLK_LCTRL) {
-      crouchReducer = 2.0;
+      speedMultiplier = 2.0;
     }
   }
   if (event.type == SDL_KEYUP) {
@@ -73,18 +62,14 @@ void Window::onEvent(SDL_Event const &event) {
          event.key.keysym.sym == SDLK_d) &&
         m_truckSpeed > 0)
       m_truckSpeed = 0.0f;
-    if (event.key.keysym.sym == SDLK_q && m_panSpeed < 0)
-      m_panSpeed = 0.0f;
-    if (event.key.keysym.sym == SDLK_e && m_panSpeed > 0)
-      m_panSpeed = 0.0f;
     if (event.key.keysym.sym == SDLK_SPACE)
-      avodaco = false;
+      jumping = false;
     if (event.key.keysym.sym == SDLK_LSHIFT) {
       m_camera.crouching(false);
-      crouchReducer = 1.5;
+      speedMultiplier = 1.5;
     }
     if (event.key.keysym.sym == SDLK_LCTRL) {
-      crouchReducer = 1.5;
+      speedMultiplier = 1.5;
     }
   }
 }
@@ -97,13 +82,6 @@ void Window::onCreate() {
 
   // Enable depth buffering
   abcg::glEnable(GL_DEPTH_TEST);
-
-  // Create program
-  // m_program =
-  //     abcg::createOpenGLProgram({{.source = assetsPath + "blinnphong.vert",
-  //                                 .stage = abcg::ShaderStage::Vertex},
-  //                                {.source = assetsPath + "blinnphong.frag",
-  //                                 .stage = abcg::ShaderStage::Fragment}});
 
   m_program =
       abcg::createOpenGLProgram({{.source = assetsPath + "lookat.vert",
@@ -225,19 +203,19 @@ void Window::onPaint() {
 
   abcg::glBindVertexArray(m_VAO);
 
-  const int groundCount{15};
-  for (int x = 0; x < groundCount; x++) {
-    for (int y = 0; y < groundCount; y++) {
+  const int cubeSideCnt{15};
+  for (int x = 0; x < cubeSideCnt; x++) {
+    for (int y = 0; y < cubeSideCnt; y++) {
       glm::mat4 model{1.0f};
       model = glm::translate(model,
-                             glm::vec3(-(groundCount / 2.0 - 1.0f) + x, -0.5f,
-                                       -(groundCount / 2.0 - 1.0f) + y));
+                             glm::vec3(-(cubeSideCnt / 2.0 - 1.0f) + x, -0.5f,
+                                       -(cubeSideCnt / 2.0 - 1.0f) + y));
       model = glm::scale(model, glm::vec3(0.5f));
 
       abcg::glUniformMatrix4fv(m_modelMatrixLocation, 1, GL_FALSE,
                                &model[0][0]);
-      abcg::glUniform4f(m_colorLocation, x / (groundCount * 1.0),
-                        (x + y) / (groundCount * 2.0f), y / (groundCount * 1.0),
+      abcg::glUniform4f(m_colorLocation, x / (cubeSideCnt * 1.0),
+                        (x + y) / (cubeSideCnt * 2.0f), y / (cubeSideCnt * 1.0),
                         1.0f);
       abcg::glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT,
                            nullptr);
@@ -265,111 +243,8 @@ void Window::onUpdate() {
   auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
 
   // Update LookAt camera
-  m_camera.dolly(m_dollySpeed * deltaTime * crouchReducer);
-  m_camera.truck(m_truckSpeed * deltaTime * crouchReducer);
-  m_camera.pan(m_panSpeed * deltaTime);
-  m_camera.trackball(m_trackBall, pressed);
-  m_camera.jump(avodaco, deltaTime);
+  m_camera.dolly(m_dollySpeed * deltaTime * speedMultiplier);
+  m_camera.truck(m_truckSpeed * deltaTime * speedMultiplier);
+  m_camera.trackball(m_trackBall, left_click);
+  m_camera.jump(jumping, deltaTime);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-// void Window::onCreate() {
-
-//   auto const &assetsPath{abcg::Application::getAssetsPath()};
-
-//   abcg::glClearColor(0, 0, 0, 1);
-
-//   // Enable depth buffering
-//   abcg::glEnable(GL_DEPTH_TEST);
-
-//   // Create program
-//   m_program =
-//       abcg::createOpenGLProgram({{.source = assetsPath + "lookat.vert",
-//                                   .stage = abcg::ShaderStage::Vertex},
-//                                  {.source = assetsPath + "lookat.frag",
-//                                   .stage = abcg::ShaderStage::Fragment}});
-
-//   m_ground.create(m_program);
-
-//   // Get location of uniform variables
-//   m_viewMatrixLocation = abcg::glGetUniformLocation(m_program, "viewMatrix");
-//   m_projMatrixLocation = abcg::glGetUniformLocation(m_program, "projMatrix");
-//   m_modelMatrixLocation = abcg::glGetUniformLocation(m_program,
-//   "modelMatrix"); m_colorLocation = abcg::glGetUniformLocation(m_program,
-//   "color");
-
-//   // clang-format off
-//   // Creating Cube
-//   std::array positions{
-//       glm::vec3{-1.0f, -1.0f, -1.0f},
-//       glm::vec3{-1.0f, -1.0f, 1.0f},
-//       glm::vec3{-1.0f, 1.0f, -1.0f},
-//       glm::vec3{-1.0f, 1.0f, 1.0f},
-//       glm::vec3{1.0f, -1.0f, -1.0f},
-//       glm::vec3{1.0f, -1.0f, 1.0f},
-//       glm::vec3{1.0f, 1.0f, -1.0f},
-//       glm::vec3{1.0f, 1.0f, 1.0f},
-//   };
-
-//   std::array const indices{
-//    0, 1, 2,
-//    1, 3, 2,
-//    4, 5, 6,
-//    5, 7, 6,
-//    0, 4, 2,
-//    4, 6, 2,
-//    1, 5, 3,
-//    2, 7, 3,
-//    2, 6, 3,
-//    6, 7, 3,
-//    0, 4, 1,
-//    4, 5, 1
-//    };
-//   // clang-format on
-
-//   // VBO
-//   abcg::glGenBuffers(1, &m_VBO);
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-//   abcg::glBufferData(GL_ARRAY_BUFFER,
-//                      sizeof(positions),
-//                      positions.data(), GL_STATIC_DRAW);
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-//   // EBO
-//   abcg::glGenBuffers(1, &m_EBO);
-//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-//   abcg::glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-//                      sizeof(indices),
-//                      indices.data(), GL_STATIC_DRAW);
-//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-//   // Create VAO
-//   abcg::glGenVertexArrays(1, &m_VAO);
-
-//   // Bind vertex attributes to current VAO
-//   abcg::glBindVertexArray(m_VAO);
-
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-//   auto const positionAttribute{
-//       abcg::glGetAttribLocation(m_program, "inPosition")};
-//   abcg::glEnableVertexAttribArray(positionAttribute);
-//   abcg::glVertexAttribPointer(positionAttribute, 3, GL_FLOAT, GL_FALSE,
-//                               sizeof(Vertex), nullptr);
-//   abcg::glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-//   abcg::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-
-//   // End of binding to current VAO
-//   abcg::glBindVertexArray(0);
-// }

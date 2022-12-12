@@ -2,16 +2,15 @@
 #define WINDOW_HPP_
 
 #include "abcgOpenGL.hpp"
-
 #include "camera.hpp"
-#include "model.hpp"
+
 #include "trackball.hpp"
 
 
-// struct Vertex {
-//   glm::vec3 position;
-//   friend bool operator==(Vertex const &, Vertex const &) = default;
-// };
+struct Vertex {
+  glm::vec3 position;
+  friend bool operator==(Vertex const &, Vertex const &) = default;
+};
 
 class Window : public abcg::OpenGLWindow {
 protected:
@@ -39,16 +38,14 @@ private:
   Camera m_camera;
   float m_dollySpeed{};
   float m_truckSpeed{};
-  float m_panSpeed{};
-  float crouchReducer{1.5};
-  bool avodaco{false};
-  bool pressed{false};
+  float speedMultiplier{1.5};
+  bool jumping{false};
+  bool left_click{false};
 
   std::vector<Vertex> m_vertices;
   std::vector<GLuint> m_indices;
 
   TrackBall m_trackBall;
-  float m_zoom{};
 
   void loadModelFromFile(std::string_view path);
   void createCube();
